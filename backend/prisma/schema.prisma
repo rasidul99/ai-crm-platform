@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTING
+  REPLIED
+  BOOKED
+  CLOSED
+  ARCHIVED
+}
+
+enum LeadSource {
+  GOOGLE
+  FACEBOOK
+  INSTAGRAM
+  LINKEDIN
+  MANUAL
+  OTHER
+}
+
+enum InteractionType {
+  EMAIL
+  CHAT
+  CALL
+  NOTE
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         Role     @default(EMPLOYEE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  leads        Lead[]   // Leads assigned to this user
+}
+
+model Lead {
+  id             String        @id @default(uuid())
+  name           String?
+  email          String?       @unique
+  phone          String?
+  source         LeadSource    @default(OTHER)
+  status         LeadStatus    @default(NEW)
+  score          Int           @default(0)
+  sourceUrl      String?       // URL where lead was found
+  initialQuery   String?       // Search query used to find lead
+  assignedUserId String?
+  assignedUser   User?         @relation(fields: [assignedUserId], references: [id])
+  campaignId     String?
+  campaign       Campaign?     @relation(fields: [campaignId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  interactions   Interaction[]
+  scrapedFromId  String?
+  scrapeLog      ScrapeLog?    @relation(fields: [scrapedFromId], references: [id])
+  
+  socialId       String?       @unique // Facebook PSID or WhatsApp Phone ID
+  platform       String?       // "FACEBOOK", "WHATSAPP"
+
+  @@index([email])
+  @@index([status])
+  @@index([socialId])
+}
+
+model Interaction {
+  id        String          @id @default(uuid())
+  leadId    String
+  lead      Lead            @relation(fields: [leadId], references: [id])
+  type      InteractionType
+  direction String?         // INBOUND or OUTBOUND
+  content   String          // Email body, chat message, or call summary
+  metadata  Json?           // Store extra data like call duration, email open status
+  createdAt DateTime        @default(now())
+}
+
+model ScrapeLog {
+  id        String   @id @default(uuid())
+  query     String
+  source    String   // "Google", "Facebook"
+  leadsFound Int
+  status    String   // "SUCCESS", "FAILED"
+  createdAt DateTime @default(now())
+  leads     Lead[]
+}
+
+model Blocklist {
+  id        String   @id @default(uuid())
+  value     String   @unique // Email or specific phone number
+  type      String   // "EMAIL", "PHONE", "DOMAIN"
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+
+
+model Campaign {
+  id        String   @id @default(uuid())
+  name      String
+  type      String   @default("EMAIL") // EMAIL, LINKEDIN, etc.
+  status    String   @default("DRAFT") // DRAFT, ACTIVE, PAUSED, COMPLETED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  leads     Lead[]
+}
+
+model AppSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique // e.g., "GEMINI_API_KEY"
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
