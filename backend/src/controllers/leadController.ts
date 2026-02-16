@@ -62,7 +62,7 @@ export const updateLead = async (req: Request, res: Response): Promise<void> => 
         const data = req.body;
         // const data = req.body; // Remove duplicate
         const lead = await prisma.lead.update({
-            where: { id },
+            where: { id: id as string },
             data: data as any
         });
         res.json(lead);
@@ -76,7 +76,7 @@ export const deleteLead = async (req: Request, res: Response): Promise<void> => 
     try {
         const { id } = req.params;
         await prisma.lead.delete({
-            where: { id }
+            where: { id: id as string }
         });
         res.status(204).send();
     } catch (error) {
@@ -93,7 +93,7 @@ export const updateLeadStage = async (req: Request, res: Response): Promise<void
         // Validate status if needed, or trust TS/Prisma to throw if invalid
 
         const lead = await prisma.lead.update({
-            where: { id },
+            where: { id: id as string },
             data: { status: status as any }
         });
         res.json(lead);
