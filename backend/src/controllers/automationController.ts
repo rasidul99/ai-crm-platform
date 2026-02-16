@@ -75,7 +75,7 @@ export const triggerScrapeAndOutreach = async (req: Request, res: Response): Pro
                             type: 'EMAIL',
                             direction: 'OUTBOUND',
                             content: body,
-                            metadata: { subject, aiAnalysis: aiResult }
+                            metadata: { subject, aiAnalysis: aiResult } as any
                         }
                     });
 

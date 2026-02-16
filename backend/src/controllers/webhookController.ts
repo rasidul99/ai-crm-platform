@@ -3,9 +3,9 @@ import { ChatService } from '../services/chatService';
 
 // Verify Webhook (Meta requirement)
 export const verifyWebhook = (req: Request, res: Response): void => {
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
+    const mode = req.query['hub.mode'] as string;
+    const token = req.query['hub.verify_token'] as string;
+    const challenge = req.query['hub.challenge'] as string;
 
     if (mode && token) {
         if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {

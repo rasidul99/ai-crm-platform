@@ -4,9 +4,22 @@ import { PrismaClient, Prisma } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Get all leads
+// Get all leads with pagination and filtering
 export const getLeads = async (req: Request, res: Response): Promise<void> => {
     try {
+        const limit = req.query.limit ? Number(req.query.limit as string) : 50;
+        const offset = req.query.offset ? Number(req.query.offset as string) : 0;
+        const status = req.query.status as string | undefined;
+
+        const where: any = {};
+        if (status) {
+            where.status = status;
+        }
+
         const leads = await prisma.lead.findMany({
+            where,
+            take: limit,
+            skip: offset,
             include: {
                 campaign: true,
                 assignedUser: true
