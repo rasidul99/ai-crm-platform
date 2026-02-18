@@ -8,6 +8,7 @@ import automationRoutes from './routes/automationRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import voiceRoutes from './routes/voiceRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
+import settingsRoutes from './routes/settingsRoutes';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api/automation', automationRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/voice', voiceRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Basic Heartbeat
 app.get('/', (req, res) => {

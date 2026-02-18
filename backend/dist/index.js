@@ -12,6 +12,7 @@ const automationRoutes_1 = __importDefault(require("./routes/automationRoutes"))
 const webhookRoutes_1 = __importDefault(require("./routes/webhookRoutes"));
 const voiceRoutes_1 = __importDefault(require("./routes/voiceRoutes"));
 const analyticsRoutes_1 = __importDefault(require("./routes/analyticsRoutes"));
+const settingsRoutes_1 = __importDefault(require("./routes/settingsRoutes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const prisma = new client_1.PrismaClient();
@@ -23,6 +24,7 @@ app.use('/api/automation', automationRoutes_1.default);
 app.use('/api/webhooks', webhookRoutes_1.default);
 app.use('/api/voice', voiceRoutes_1.default);
 app.use('/api/analytics', analyticsRoutes_1.default);
+app.use('/api/settings', settingsRoutes_1.default);
 // Basic Heartbeat
 app.get('/', (req, res) => {
     res.send('AI Lead Generation CRM API is Running');
