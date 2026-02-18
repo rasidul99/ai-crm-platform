@@ -34,6 +34,10 @@ export const api = {
         const response = await axios.patch(`${API_URL}/leads/${id}/stage`, { status });
         return response.data;
     },
+    updateLead: async (id: string, data: Partial<Lead>) => {
+        const response = await axios.patch(`${API_URL}/leads/${id}`, data);
+        return response.data;
+    },
 
     // Analytics
     getAnalytics: async () => {

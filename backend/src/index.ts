@@ -9,6 +9,7 @@ import webhookRoutes from './routes/webhookRoutes';
 import voiceRoutes from './routes/voiceRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import settingsRoutes from './routes/settingsRoutes';
+import aiRoutes from './routes/aiRoutes';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/automation', automationRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/voice', voiceRoutes);
+app.use('/api/ai', aiRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/settings', settingsRoutes);
 

@@ -8,6 +8,7 @@ import { api, Lead } from "../../lib/api";
 import { Eye, Calendar, Mail, Phone, Sparkles, BarChart3, X, ChevronDown } from "lucide-react";
 import clsx from "clsx";
 import toast, { Toaster } from 'react-hot-toast';
+import { EditLeadModal } from "../../components/EditLeadModal";
 
 const STATUS_OPTIONS = ['NEW', 'CONTACTING', 'REPLIED', 'BOOKED', 'CLOSED', 'ARCHIVED'];
 
@@ -17,6 +18,7 @@ export default function LeadsPage() {
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [aiLoading, setAiLoading] = useState<string | null>(null);
     const [aiOutput, setAiOutput] = useState<{ title: string; content: string } | null>(null);
+    const [editModalOpen, setEditModalOpen] = useState(false);
 
     useEffect(() => {
         loadLeads();
@@ -265,7 +267,7 @@ export default function LeadsPage() {
 
                             <div className="p-6 border-t border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50">
                                 <button
-                                    onClick={() => toast.success("Opening edit modal...")}
+                                    onClick={() => setEditModalOpen(true)}
                                     className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-3 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 active:scale-95 transition-all shadow-md"
                                 >
                                     Edit Lead Details
@@ -274,6 +276,28 @@ export default function LeadsPage() {
                         </div>
                     </div>
                 )}
+
+                <EditLeadModal
+                    isOpen={editModalOpen}
+                    onClose={() => setEditModalOpen(false)}
+                    lead={selectedLead}
+                    onSuccess={() => {
+                        loadLeads();
+                        // Also update selectedLead if needed, or close details drawer
+                        toast.success("Lead details updated");
+                        // Ideally we should refetch selectedLead or update it locally 
+                        if (selectedLead) {
+                            // Quick re-fetch or manual update
+                            api.getLeads().then(data => {
+                                // update main list
+                                setLeads(data);
+                                // update selected lead view
+                                const updated = data.find(l => l.id === selectedLead.id);
+                                if (updated) setSelectedLead(updated);
+                            });
+                        }
+                    }}
+                />
 
                 {/* AI Output Modal */}
                 {aiOutput && (
