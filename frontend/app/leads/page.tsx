@@ -15,6 +15,8 @@ export default function LeadsPage() {
     const [leads, setLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+    const [aiLoading, setAiLoading] = useState<string | null>(null);
+    const [aiOutput, setAiOutput] = useState<{ title: string; content: string } | null>(null);
 
     useEffect(() => {
         loadLeads();
@@ -49,6 +51,34 @@ export default function LeadsPage() {
             console.error("Failed to update status", error);
             toast.error("Failed to update status");
             setLeads(previousLeads); // Revert
+        }
+    };
+
+    const handleGenerateEmail = async () => {
+        if (!selectedLead) return;
+        setAiLoading('email');
+        try {
+            const data = await api.generateEmail(selectedLead.id);
+            setAiOutput({ title: 'Draft Email', content: data.email });
+        } catch (error) {
+            console.error("Failed to generate email", error);
+            toast.error("Failed to generate email");
+        } finally {
+            setAiLoading(null);
+        }
+    };
+
+    const handleAnalyzeLead = async () => {
+        if (!selectedLead) return;
+        setAiLoading('analyze');
+        try {
+            const data = await api.analyzeLead(selectedLead.id);
+            setAiOutput({ title: 'Lead Analysis', content: data.analysis });
+        } catch (error) {
+            console.error("Failed to analyze lead", error);
+            toast.error("Failed to analyze lead");
+        } finally {
+            setAiLoading(null);
         }
     };
 
@@ -181,28 +211,32 @@ export default function LeadsPage() {
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
                                             onClick={() => toast.success("Scoring lead with AI...")}
-                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700"
+                                            disabled={!!aiLoading}
+                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 disabled:opacity-50"
                                         >
                                             <BarChart3 className="w-4 h-4 text-blue-500" />
                                             Score Lead
                                         </button>
                                         <button
-                                            onClick={() => toast.success("Analyzing lead intent...")}
-                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700"
+                                            onClick={handleAnalyzeLead}
+                                            disabled={!!aiLoading}
+                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 disabled:opacity-50"
                                         >
                                             <Sparkles className="w-4 h-4 text-purple-500" />
-                                            Analyze Intent
+                                            {aiLoading === 'analyze' ? 'Analyzing...' : 'Analyze Intent'}
                                         </button>
                                         <button
-                                            onClick={() => toast.success("Drafting email with Gemini AI...")}
-                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700"
+                                            onClick={handleGenerateEmail}
+                                            disabled={!!aiLoading}
+                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 disabled:opacity-50"
                                         >
                                             <Mail className="w-4 h-4 text-green-500" />
-                                            Draft Email
+                                            {aiLoading === 'email' ? 'Drafting...' : 'Draft Email'}
                                         </button>
                                         <button
                                             onClick={() => toast.success("Planning call with Vapi AI...")}
-                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700"
+                                            disabled={!!aiLoading}
+                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 disabled:opacity-50"
                                         >
                                             <Phone className="w-4 h-4 text-orange-500" />
                                             Plan Call
@@ -235,6 +269,46 @@ export default function LeadsPage() {
                                     className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-3 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 active:scale-95 transition-all shadow-md"
                                 >
                                     Edit Lead Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* AI Output Modal */}
+                {aiOutput && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col border border-gray-200 dark:border-zinc-800">
+                            <div className="p-6 border-b border-gray-200 dark:border-zinc-800 flex justify-between items-center bg-gray-50 dark:bg-zinc-900/50">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Sparkles className="w-5 h-5 text-purple-600" />
+                                    {aiOutput.title}
+                                </h3>
+                                <button
+                                    onClick={() => setAiOutput(null)}
+                                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="p-6 overflow-y-auto font-mono text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                                {aiOutput.content}
+                            </div>
+                            <div className="p-6 border-t border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50 flex justify-end gap-3">
+                                <button
+                                    onClick={() => setAiOutput(null)}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                                >
+                                    Close
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(aiOutput.content);
+                                        toast.success("Copied to clipboard");
+                                    }}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+                                >
+                                    Copy to Clipboard
                                 </button>
                             </div>
                         </div>

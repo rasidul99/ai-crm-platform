@@ -59,5 +59,15 @@ export const api = {
     getBlocklist: async () => {
         // Implement when backend endpoint exists
         return [];
+    },
+
+    // AI Features
+    generateEmail: async (leadId: string) => {
+        const response = await axios.post(`${API_URL}/ai/generate-email`, { leadId });
+        return response.data;
+    },
+    analyzeLead: async (leadId: string) => {
+        const response = await axios.post(`${API_URL}/ai/analyze-lead`, { leadId });
+        return response.data;
     }
 };
