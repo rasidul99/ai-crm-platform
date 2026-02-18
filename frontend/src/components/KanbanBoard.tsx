@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragOverEvent, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragOverEvent, DragEndEvent, useDroppable } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { api, Lead } from '../lib/api';
@@ -46,6 +46,34 @@ function SortableLead({ lead }: { lead: Lead }) {
     );
 }
 
+function KanbanColumn({ column, leads, children }: { column: string, leads: Lead[], children: React.ReactNode }) {
+    const { setNodeRef } = useDroppable({
+        id: column,
+    });
+
+    return (
+        <div ref={setNodeRef} className="flex-shrink-0 w-80 bg-gray-50 dark:bg-zinc-950/50 rounded-xl border border-gray-200 dark:border-zinc-800 flex flex-col">
+            {/* Column Header */}
+            <div className="p-4 border-b border-gray-200 dark:border-zinc-800 flex justify-between items-center bg-white dark:bg-zinc-950 rounded-t-xl sticky top-0 z-10">
+                <h3 className="font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                    <span className={clsx("w-2 h-2 rounded-full", {
+                        'bg-blue-500': column === 'NEW',
+                        'bg-yellow-500': column === 'CONTACTING',
+                        'bg-purple-500': column === 'REPLIED',
+                        'bg-green-500': column === 'BOOKED',
+                        'bg-gray-500': column === 'CLOSED' || column === 'ARCHIVED',
+                    })}></span>
+                    {column}
+                </h3>
+                <span className="bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-gray-400 text-xs px-2 py-0.5 rounded-full">
+                    {leads.filter(l => l.status === column).length}
+                </span>
+            </div>
+            {children}
+        </div>
+    );
+}
+
 export function KanbanBoard() {
     const [leads, setLeads] = useState<Lead[]>([]);
     const [activeId, setActiveId] = useState<string | null>(null);
@@ -72,20 +100,17 @@ export function KanbanBoard() {
         const activeId = active.id;
         const overId = over.id;
 
-        // Find the containers
-        const activeItem = leads.find(l => l.id === activeId);
-        const overItem = leads.find(l => l.id === overId);
+        const activeLead = leads.find(l => l.id === activeId);
+        if (!activeLead) return;
 
-        if (!activeItem) return;
-
-        // If over a column (not an item), treat distinct
-        const overColumn = COLUMNS.includes(overId as string);
-
-        if (activeItem && overItem && activeItem.status !== overItem.status) {
-            // Hovering over an item in a different column
-            // We can optimistically update state here if we want super smooth interactions, 
-            // but keeping it simple for DragEnd usually works fine for Kanban
+        // If dropping on a column
+        if (COLUMNS.includes(overId as string)) {
+            // We could optimistically move it nicely here, but dragEnd handles the actual logic.
+            // Just ensure we don't crash.
+            return;
         }
+
+        // Behavior for dropping on other items (reordering) could be added here
     };
 
     const handleDragEnd = async (event: DragEndEvent) => {
@@ -97,18 +122,17 @@ export function KanbanBoard() {
         const activeId = active.id as string;
         const overId = over.id as string;
 
-        // Find dragged item
         const activeLead = leads.find(l => l.id === activeId);
         if (!activeLead) return;
 
-        // Determine new status
         let newStatus = activeLead.status;
 
+        // Determine new status based on drop target
         if (COLUMNS.includes(overId)) {
-            // Dropped strictly on a column header/area
+            // Dropped on the column container directly
             newStatus = overId as any;
         } else {
-            // Dropped on another item
+            // Dropped on another card
             const overLead = leads.find(l => l.id === overId);
             if (overLead) {
                 newStatus = overLead.status;
@@ -116,8 +140,11 @@ export function KanbanBoard() {
         }
 
         if (activeLead.status !== newStatus) {
+            console.log(`Moving lead ${activeId} from ${activeLead.status} to ${newStatus}`);
+
             // Optimistic Update
-            setLeads(leads => leads.map(l =>
+            const previousLeads = [...leads];
+            setLeads(currentLeads => currentLeads.map(l =>
                 l.id === activeId ? { ...l, status: newStatus } : l
             ));
 
@@ -127,9 +154,7 @@ export function KanbanBoard() {
             } catch (error) {
                 console.error("Failed to update status", error);
                 // Revert
-                setLeads(leads => leads.map(l =>
-                    l.id === activeId ? { ...l, status: activeLead.status } : l
-                ));
+                setLeads(previousLeads);
             }
         }
     };
@@ -144,24 +169,7 @@ export function KanbanBoard() {
         >
             <div className="flex h-full overflow-x-auto gap-4 p-4">
                 {COLUMNS.map(column => (
-                    <div key={column} className="flex-shrink-0 w-80 bg-gray-50 dark:bg-zinc-950/50 rounded-xl border border-gray-200 dark:border-zinc-800 flex flex-col">
-                        {/* Column Header */}
-                        <div className="p-4 border-b border-gray-200 dark:border-zinc-800 flex justify-between items-center bg-white dark:bg-zinc-950 rounded-t-xl sticky top-0 z-10">
-                            <h3 className="font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-                                <span className={clsx("w-2 h-2 rounded-full", {
-                                    'bg-blue-500': column === 'NEW',
-                                    'bg-yellow-500': column === 'CONTACTING',
-                                    'bg-purple-500': column === 'REPLIED',
-                                    'bg-green-500': column === 'BOOKED',
-                                    'bg-gray-500': column === 'CLOSED' || column === 'ARCHIVED',
-                                })}></span>
-                                {column}
-                            </h3>
-                            <span className="bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-gray-400 text-xs px-2 py-0.5 rounded-full">
-                                {leads.filter(l => l.status === column).length}
-                            </span>
-                        </div>
-
+                    <KanbanColumn key={column} column={column} leads={leads}>
                         {/* Sortable Area */}
                         <SortableContext
                             id={column} // The column itself is a sortable container
@@ -174,7 +182,7 @@ export function KanbanBoard() {
                                 ))}
                             </div>
                         </SortableContext>
-                    </div>
+                    </KanbanColumn>
                 ))}
             </div>
 
