@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Sidebar } from '../../components/Sidebar';
 import { api } from '../../lib/api';
 import { Info } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function SettingsPage() {
     const [settings, setSettings] = useState<Record<string, string>>({});
