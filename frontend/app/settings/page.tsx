@@ -58,9 +58,10 @@ export default function SettingsPage() {
         try {
             await api.updateSettings(key, value);
             setSettings(prev => ({ ...prev, [key]: value }));
+            toast.success('Setting saved successfully');
         } catch (error) {
             console.error('Failed to save setting', error);
-            alert('Failed to save setting');
+            toast.error('Failed to save setting');
         } finally {
             setSaving(null);
         }
@@ -68,6 +69,7 @@ export default function SettingsPage() {
 
     return (
         <div className="flex h-screen bg-gray-100 dark:bg-zinc-900 font-sans">
+            <Toaster position="top-right" />
             <Sidebar />
             <main className="flex-1 overflow-y-auto">
                 <div className="max-w-4xl mx-auto p-8">
