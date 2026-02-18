@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { AnalyticsCharts } from "../components/AnalyticsCharts";
 import { api, AnalyticsData } from "../lib/api";
+import { clsx } from 'clsx';
 
 export default function Home() {
     const [data, setData] = useState<AnalyticsData | null>(null);
