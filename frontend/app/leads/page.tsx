@@ -179,19 +179,31 @@ export default function LeadsPage() {
                                         AI Assist
                                     </h3>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <button className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600">
+                                        <button
+                                            onClick={() => toast.success("Scoring lead with AI...")}
+                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700"
+                                        >
                                             <BarChart3 className="w-4 h-4 text-blue-500" />
                                             Score Lead
                                         </button>
-                                        <button className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600">
+                                        <button
+                                            onClick={() => toast.success("Analyzing lead intent...")}
+                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700"
+                                        >
                                             <Sparkles className="w-4 h-4 text-purple-500" />
                                             Analyze Intent
                                         </button>
-                                        <button className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600">
+                                        <button
+                                            onClick={() => toast.success("Drafting email with Gemini AI...")}
+                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700"
+                                        >
                                             <Mail className="w-4 h-4 text-green-500" />
                                             Draft Email
                                         </button>
-                                        <button className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600">
+                                        <button
+                                            onClick={() => toast.success("Planning call with Vapi AI...")}
+                                            className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700"
+                                        >
                                             <Phone className="w-4 h-4 text-orange-500" />
                                             Plan Call
                                         </button>
@@ -218,7 +230,10 @@ export default function LeadsPage() {
                             </div>
 
                             <div className="p-6 border-t border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50">
-                                <button className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity">
+                                <button
+                                    onClick={() => toast.success("Opening edit modal...")}
+                                    className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-3 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 active:scale-95 transition-all shadow-md"
+                                >
                                     Edit Lead Details
                                 </button>
                             </div>
