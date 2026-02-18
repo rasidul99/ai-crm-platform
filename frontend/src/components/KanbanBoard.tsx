@@ -6,12 +6,12 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { CSS } from '@dnd-kit/utilities';
 import { api, Lead } from '../lib/api';
 import clsx from 'clsx';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, X, Sparkles, Mail, BarChart3, Phone, Calendar } from 'lucide-react';
 
 const COLUMNS = ['NEW', 'CONTACTING', 'REPLIED', 'BOOKED', 'CLOSED'];
 
 // Sortable Item Component
-function SortableLead({ lead }: { lead: Lead }) {
+function SortableLead({ lead, onClick }: { lead: Lead, onClick: (lead: Lead) => void }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lead.id, data: { ...lead } });
 
     const style = {
@@ -25,8 +25,9 @@ function SortableLead({ lead }: { lead: Lead }) {
             style={style}
             {...attributes}
             {...listeners}
+            onClick={() => onClick(lead)}
             className={clsx(
-                "bg-white dark:bg-zinc-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-800 mb-3 cursor-grab active:cursor-grabbing group hover:border-blue-500 transition-colors",
+                "bg-white dark:bg-zinc-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-800 mb-3 cursor-pointer active:cursor-grabbing group hover:border-blue-500 transition-colors relative",
                 isDragging && "opacity-50"
             )}
         >
@@ -77,6 +78,7 @@ function KanbanColumn({ column, leads, children }: { column: string, leads: Lead
 export function KanbanBoard() {
     const [leads, setLeads] = useState<Lead[]>([]);
     const [activeId, setActiveId] = useState<string | null>(null);
+    const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
     // Sensors
     const sensors = useSensors(
@@ -166,42 +168,133 @@ export function KanbanBoard() {
     };
 
     return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-        >
-            <div className="flex h-full overflow-x-auto gap-4 p-4">
-                {COLUMNS.map(column => (
-                    <KanbanColumn key={column} column={column} leads={leads}>
-                        {/* Sortable Area */}
-                        <SortableContext
-                            id={column} // The column itself is a sortable container
-                            items={leads.filter(l => l.status === column).map(l => l.id)}
-                            strategy={verticalListSortingStrategy}
-                        >
-                            <div className="flex-1 p-3 overflow-y-auto min-h-[150px]">
-                                {leads.filter(l => l.status === column).map(lead => (
-                                    <SortableLead key={lead.id} lead={lead} />
-                                ))}
-                            </div>
-                        </SortableContext>
-                    </KanbanColumn>
-                ))}
-            </div>
+        <>
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCorners}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+            >
+                <div className="flex h-full overflow-x-auto gap-4 p-4">
+                    {COLUMNS.map(column => (
+                        <KanbanColumn key={column} column={column} leads={leads}>
+                            {/* Sortable Area */}
+                            <SortableContext
+                                id={column} // The column itself is a sortable container
+                                items={leads.filter(l => l.status === column).map(l => l.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                <div className="flex-1 p-3 overflow-y-auto min-h-[150px]">
+                                    {leads.filter(l => l.status === column).map(lead => (
+                                        <SortableLead key={lead.id} lead={lead} onClick={setSelectedLead} />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                        </KanbanColumn>
+                    ))}
+                </div>
 
-            <DragOverlay>
-                {activeId ? (
-                    <div className="bg-white dark:bg-zinc-900 p-4 rounded-lg shadow-xl border border-blue-500 rotate-2 cursor-grabbing">
-                        {/* Simplified overlay preview */}
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                            {leads.find(l => l.id === activeId)?.name}
-                        </h4>
+                <DragOverlay>
+                    {activeId ? (
+                        <div className="bg-white dark:bg-zinc-900 p-4 rounded-lg shadow-xl border border-blue-500 rotate-2 cursor-grabbing">
+                            {/* Simplified overlay preview */}
+                            <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                                {leads.find(l => l.id === activeId)?.name}
+                            </h4>
+                        </div>
+                    ) : null}
+                </DragOverlay>
+            </DndContext>
+
+            {/* Lead Details Drawer */}
+            {selectedLead && (
+                <div className="fixed inset-0 z-50 flex justify-end">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+                        onClick={() => setSelectedLead(null)}
+                    />
+
+                    {/* Slide-over Panel */}
+                    <div className="relative w-full max-w-lg bg-white dark:bg-zinc-950 h-full shadow-2xl overflow-y-auto border-l border-gray-200 dark:border-zinc-800 animate-in slide-in-from-right duration-300 flex flex-col">
+
+                        {/* Header */}
+                        <div className="p-6 border-b border-gray-200 dark:border-zinc-800 flex justify-between items-start bg-white dark:bg-zinc-950 sticky top-0 z-10">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedLead.name}</h2>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 flex items-center gap-2">
+                                    <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
+                                    {selectedLead.status}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedLead(null)}
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors text-gray-500"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 space-y-8 flex-1">
+
+                            {/* AI Actions */}
+                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-xl p-5 border border-blue-100 dark:border-blue-800/30">
+                                <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-4 flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" />
+                                    AI Assist
+                                </h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600">
+                                        <BarChart3 className="w-4 h-4 text-blue-500" />
+                                        Score Lead
+                                    </button>
+                                    <button className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600">
+                                        <Sparkles className="w-4 h-4 text-purple-500" />
+                                        Analyze Intent
+                                    </button>
+                                    <button className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600">
+                                        <Mail className="w-4 h-4 text-green-500" />
+                                        Draft Email
+                                    </button>
+                                    <button className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600">
+                                        <Phone className="w-4 h-4 text-orange-500" />
+                                        Plan Call
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Contact Info */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-3">Contact Information</h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-zinc-900 rounded-lg border border-gray-100 dark:border-zinc-800">
+                                        <Mail className="w-4 h-4 text-gray-400" />
+                                        <span className="text-gray-700 dark:text-gray-300 text-sm">{selectedLead.email || 'No email provided'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-zinc-900 rounded-lg border border-gray-100 dark:border-zinc-800">
+                                        <Phone className="w-4 h-4 text-gray-400" />
+                                        <span className="text-gray-700 dark:text-gray-300 text-sm">{selectedLead.phone || 'No phone provided'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-zinc-900 rounded-lg border border-gray-100 dark:border-zinc-800">
+                                        <Calendar className="w-4 h-4 text-gray-400" />
+                                        <span className="text-gray-700 dark:text-gray-300 text-sm">Created on {new Date(selectedLead.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-6 border-t border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50">
+                            <button className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity">
+                                Edit Lead
+                            </button>
+                        </div>
                     </div>
-                ) : null}
-            </DragOverlay>
-        </DndContext>
+                </div>
+            )}
+        </>
     );
 }
