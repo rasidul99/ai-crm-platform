@@ -15,23 +15,9 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 4000;
 
-const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    process.env.FRONTEND_URL || ''
-];
 
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.warn(`Blocked CORS for origin: ${origin}`);
-            callback(null, false); // Fail checking but don't crash
-        }
-    },
-    credentials: true
-}));
+app.use(cors({ origin: '*' }));
+
 app.use(express.json());
 
 app.use('/api/leads', leadRoutes);
