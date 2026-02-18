@@ -85,12 +85,16 @@ export const deleteLead = async (req: Request, res: Response): Promise<void> => 
 };
 
 // Update lead stage (Kanban specific)
+// Update lead stage (Kanban specific)
 export const updateLeadStage = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
         const { status } = req.body; // Expecting LeadStatus enum value
 
+        console.log(`Updating lead ${id} stage to ${status}`);
+
         // Validate status if needed, or trust TS/Prisma to throw if invalid
+        // In a real app, you should validate against the enum here.
 
         const lead = await prisma.lead.update({
             where: { id: id as string },
@@ -98,6 +102,7 @@ export const updateLeadStage = async (req: Request, res: Response): Promise<void
         });
         res.json(lead);
     } catch (error) {
+        console.error("Failed to update lead stage:", error);
         res.status(500).json({ error: 'Failed to update lead stage' });
     }
 };

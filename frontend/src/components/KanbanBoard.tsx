@@ -115,6 +115,8 @@ export function KanbanBoard() {
 
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
+
+        // Always reset activeId at the end of the interaction
         setActiveId(null);
 
         if (!over) return;
@@ -142,7 +144,7 @@ export function KanbanBoard() {
         if (activeLead.status !== newStatus) {
             console.log(`Moving lead ${activeId} from ${activeLead.status} to ${newStatus}`);
 
-            // Optimistic Update
+            // Optimistic Update: Create a new array and new object for the updated lead
             const previousLeads = [...leads];
             setLeads(currentLeads => currentLeads.map(l =>
                 l.id === activeId ? { ...l, status: newStatus } : l
@@ -150,10 +152,14 @@ export function KanbanBoard() {
 
             // API Call
             try {
-                await api.updateLeadStage(activeId, newStatus);
+                const updatedLead = await api.updateLeadStage(activeId, newStatus);
+                // Confirm state with server response (optional but good practice)
+                setLeads(currentLeads => currentLeads.map(l =>
+                    l.id === activeId ? updatedLead : l
+                ));
             } catch (error) {
                 console.error("Failed to update status", error);
-                // Revert
+                // Revert on failure
                 setLeads(previousLeads);
             }
         }
