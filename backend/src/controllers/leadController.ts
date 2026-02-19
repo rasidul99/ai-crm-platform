@@ -59,15 +59,18 @@ export const createLead = async (req: Request, res: Response): Promise<void> => 
 export const updateLead = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const data = req.body;
-        // const data = req.body; // Remove duplicate
+        const { id: bodyId, ...data } = req.body; // Remove id from body if present
+
+        console.log(`Updating lead ${id} with data:`, data);
+
         const lead = await prisma.lead.update({
             where: { id: id as string },
             data: data as any
         });
         res.json(lead);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to update lead' });
+    } catch (error: any) {
+        console.error("Failed to update lead:", error);
+        res.status(500).json({ error: error.message || 'Failed to update lead' });
     }
 };
 
