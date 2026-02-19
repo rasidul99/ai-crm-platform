@@ -11,7 +11,7 @@ const getGeminiModel = async () => {
         throw new Error("Gemini API Key not configured");
     }
     const genAI = new GoogleGenerativeAI(apiKey.value);
-    return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    return genAI.getGenerativeModel({ model: "gemini-pro" });
 };
 
 export const aiController = {
@@ -136,13 +136,31 @@ export const aiController = {
             }
 
             // Initiate Call via Vapi
-            // Using the assistant ID from VoiceService mock config or a default one
-            // In a real app, this should come from settings too.
-            const assistantId = "21m00Tcm4TlvDq8ikWAM";
-
+            // Using inline assistant config to avoid pre-created ID issues
             const response = await axios.post('https://api.vapi.ai/call', {
                 customer: { number: lead.phone },
-                assistantId: assistantId,
+                assistant: {
+                    firstMessage: "Hello, this is the AI assistant from TechGrowth Solutions. Do you have a moment?",
+                    model: {
+                        provider: "openai",
+                        model: "gpt-3.5-turbo",
+                        messages: [
+                            {
+                                role: "system",
+                                content: "You are a helpful assistant for a Lead Generation Agency. Briefly explain our services and ask to book a meeting."
+                            }
+                        ]
+                    },
+                    voice: {
+                        provider: "11labs",
+                        voiceId: "21m00Tcm4TlvDq8ikWAM",
+                    },
+                    transcriber: {
+                        provider: "deepgram",
+                        model: "nova-2",
+                        language: "en"
+                    }
+                },
             }, {
                 headers: {
                     'Authorization': `Bearer ${vapiKey.value}`,
