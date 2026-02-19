@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import axios from 'axios';
 
 const prisma = new PrismaClient();
 
@@ -125,29 +126,36 @@ export const aiController = {
                 return res.status(404).json({ error: "Lead not found" });
             }
 
-            const model = await getGeminiModel();
-            const prompt = `Create a call plan for this lead:
-            Name: ${lead.name}
-            Company: ${lead.name} (Assume company name if similar)
-            Status: ${lead.status}
-            
-            Provide a JSON output/structure:
-            1. Goal
-            2. Opening Date
-            3. Key Questions to Ask
-            4. Objection Handling
-            
-            Keep it concise.`;
+            if (!lead.phone) {
+                return res.status(400).json({ error: "Lead has no phone number" });
+            }
 
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const text = response.text();
+            const vapiKey = await prisma.appSetting.findUnique({ where: { key: 'VAPI_API_KEY' } });
+            if (!vapiKey || !vapiKey.value) {
+                throw new Error("Vapi API Key not configured");
+            }
 
-            res.json({ plan: text });
+            // Initiate Call via Vapi
+            // Using the assistant ID from VoiceService mock config or a default one
+            // In a real app, this should come from settings too.
+            const assistantId = "21m00Tcm4TlvDq8ikWAM";
+
+            const response = await axios.post('https://api.vapi.ai/call', {
+                customer: { number: lead.phone },
+                assistantId: assistantId,
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${vapiKey.value}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            res.json({ plan: `Call initiated with Vapi!\nCall ID: ${response.data.id}\nStatus: ${response.data.status}` });
 
         } catch (error: any) {
-            console.error("AI Plan Call Error:", error);
-            res.status(500).json({ error: error.message || "Failed to plan call" });
+            console.error("Vapi Plan Call Error:", error);
+            const msg = error.response?.data?.message || error.message || "Failed to initiate call";
+            res.status(500).json({ error: msg });
         }
     }
 };

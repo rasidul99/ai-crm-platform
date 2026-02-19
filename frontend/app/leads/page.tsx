@@ -119,7 +119,16 @@ export default function LeadsPage() {
 
     return (
         <div className="flex h-screen bg-gray-100 dark:bg-zinc-900 font-sans">
-            <Toaster position="top-right" />
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    className: "break-words text-sm",
+                    style: {
+                        maxWidth: '400px',
+                        wordBreak: 'break-word'
+                    }
+                }}
+            />
             <Sidebar />
             <main className="flex-1 flex flex-col overflow-hidden">
                 <header className="h-16 flex items-center justify-between px-6 bg-white dark:bg-zinc-950 border-b border-gray-200 dark:border-zinc-800">
