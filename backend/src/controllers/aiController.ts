@@ -126,54 +126,31 @@ export const aiController = {
                 return res.status(404).json({ error: "Lead not found" });
             }
 
-            if (!lead.phone) {
-                return res.status(400).json({ error: "Lead has no phone number" });
-            }
+            const model = await getGeminiModel();
+            const prompt = `Create a detailed cold call script and strategy for this lead:
+            Name: ${lead.name}
+            Company: ${lead.name} (Assume company name if similar)
+            Status: ${lead.status}
+            Source: ${lead.source}
+            
+            Structure the response as:
+            1. Pre-Call Research (What to look for)
+            2. The Hook (Opening line)
+            3. Value Prop (Pitch)
+            4. Common Objections & Rebuttals
+            5. Closing (Asking for the meeting)
+            
+            Keep it professional and persuasive.`;
 
-            const vapiKey = await prisma.appSetting.findUnique({ where: { key: 'VAPI_API_KEY' } });
-            if (!vapiKey || !vapiKey.value) {
-                throw new Error("Vapi API Key not configured");
-            }
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
 
-            // Initiate Call via Vapi
-            // Using inline assistant config to avoid pre-created ID issues
-            const response = await axios.post('https://api.vapi.ai/call', {
-                customer: { number: lead.phone },
-                assistant: {
-                    firstMessage: "Hello, this is the AI assistant from TechGrowth Solutions. Do you have a moment?",
-                    model: {
-                        provider: "openai",
-                        model: "gpt-3.5-turbo",
-                        messages: [
-                            {
-                                role: "system",
-                                content: "You are a helpful assistant for a Lead Generation Agency. Briefly explain our services and ask to book a meeting."
-                            }
-                        ]
-                    },
-                    voice: {
-                        provider: "11labs",
-                        voiceId: "21m00Tcm4TlvDq8ikWAM",
-                    },
-                    transcriber: {
-                        provider: "deepgram",
-                        model: "nova-2",
-                        language: "en"
-                    }
-                },
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${vapiKey.value}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            res.json({ plan: `Call initiated with Vapi!\nCall ID: ${response.data.id}\nStatus: ${response.data.status}` });
+            res.json({ plan: text });
 
         } catch (error: any) {
-            console.error("Vapi Plan Call Error:", error);
-            const msg = error.response?.data?.message || error.message || "Failed to initiate call";
-            res.status(500).json({ error: msg });
+            console.error("AI Plan Call Error:", error);
+            res.status(500).json({ error: error.message || "Failed to plan call" });
         }
     }
 };
