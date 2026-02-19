@@ -11,7 +11,7 @@ const getGeminiModel = async () => {
         throw new Error("Gemini API Key not configured");
     }
     const genAI = new GoogleGenerativeAI(apiKey.value);
-    return genAI.getGenerativeModel({ model: "gemini-pro" });
+    return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 };
 
 export const aiController = {

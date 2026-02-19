@@ -35,7 +35,7 @@ export class AIService {
         }
 
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             const prompt = `
             Analyze the following lead description and return a JSON object with:
             - intent: A short summary of what they need (max 10 words).
@@ -74,7 +74,7 @@ export class AIService {
         }
 
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             const chat = model.startChat({
                 history: history.map(msg => ({ role: "user", parts: [{ text: msg }] })), // Simplified mapping for now
             });
