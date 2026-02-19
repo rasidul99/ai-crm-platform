@@ -77,4 +77,77 @@ export const aiController = {
             res.status(500).json({ error: error.message || "Failed to analyze lead" });
         }
     }
+    ,
+
+    scoreLead: async (req: Request, res: Response) => {
+        try {
+            const { leadId } = req.body;
+            const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+
+            if (!lead) {
+                return res.status(404).json({ error: "Lead not found" });
+            }
+
+            const model = await getGeminiModel();
+            const prompt = `Evaluate this lead and provide a score from 0-100 based on their likelihood to convert.
+            Name: ${lead.name}
+            Status: ${lead.status}
+            Source: ${lead.source}
+            Email: ${lead.email || 'N/A'}
+
+            Return ONLY a number (0-100).`;
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text().trim();
+            const score = parseInt(text.replace(/[^0-9]/g, '')) || 50;
+
+            // Update lead score
+            await prisma.lead.update({
+                where: { id: leadId },
+                data: { score }
+            });
+
+            res.json({ score, message: `Lead scored: ${score}` });
+
+        } catch (error: any) {
+            console.error("AI Score Error:", error);
+            res.status(500).json({ error: error.message || "Failed to score lead" });
+        }
+    },
+
+    planCall: async (req: Request, res: Response) => {
+        try {
+            const { leadId } = req.body;
+            const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+
+            if (!lead) {
+                return res.status(404).json({ error: "Lead not found" });
+            }
+
+            const model = await getGeminiModel();
+            const prompt = `Create a call plan for this lead:
+            Name: ${lead.name}
+            Company: ${lead.name} (Assume company name if similar)
+            Status: ${lead.status}
+            
+            Provide a JSON output/structure:
+            1. Goal
+            2. Opening Date
+            3. Key Questions to Ask
+            4. Objection Handling
+            
+            Keep it concise.`;
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+
+            res.json({ plan: text });
+
+        } catch (error: any) {
+            console.error("AI Plan Call Error:", error);
+            res.status(500).json({ error: error.message || "Failed to plan call" });
+        }
+    }
 };

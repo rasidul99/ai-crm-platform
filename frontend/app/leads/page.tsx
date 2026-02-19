@@ -72,6 +72,37 @@ export default function LeadsPage() {
         }
     };
 
+    const handleScoreLead = async () => {
+        if (!selectedLead) return;
+        setAiLoading('score');
+        try {
+            const data = await api.scoreLead(selectedLead.id);
+            toast.success(data.message);
+            // Update local state
+            setSelectedLead(prev => prev ? { ...prev, score: data.score } : null);
+            setLeads(current => current.map(l => l.id === selectedLead.id ? { ...l, score: data.score } : l));
+        } catch (error) {
+            console.error("Failed to score lead", error);
+            toast.error((error as any).response?.data?.error || "Failed to score lead");
+        } finally {
+            setAiLoading(null);
+        }
+    };
+
+    const handlePlanCall = async () => {
+        if (!selectedLead) return;
+        setAiLoading('plan');
+        try {
+            const data = await api.planCall(selectedLead.id);
+            setAiOutput({ title: 'Call Plan', content: data.plan });
+        } catch (error) {
+            console.error("Failed to plan call", error);
+            toast.error((error as any).response?.data?.error || "Failed to plan call");
+        } finally {
+            setAiLoading(null);
+        }
+    };
+
     const handleAnalyzeLead = async () => {
         if (!selectedLead) return;
         setAiLoading('analyze');
@@ -232,12 +263,12 @@ export default function LeadsPage() {
                                     </h3>
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
-                                            onClick={() => toast.success("Scoring lead with AI...")}
+                                            onClick={handleScoreLead}
                                             disabled={!!aiLoading}
                                             className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 disabled:opacity-50"
                                         >
                                             <BarChart3 className="w-4 h-4 text-blue-500" />
-                                            Score Lead
+                                            {aiLoading === 'score' ? 'Scoring...' : 'Score Lead'}
                                         </button>
                                         <button
                                             onClick={handleAnalyzeLead}
@@ -256,12 +287,12 @@ export default function LeadsPage() {
                                             {aiLoading === 'email' ? 'Drafting...' : 'Draft Email'}
                                         </button>
                                         <button
-                                            onClick={() => toast.success("Planning call with Vapi AI...")}
+                                            onClick={handlePlanCall}
                                             disabled={!!aiLoading}
                                             className="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 disabled:opacity-50"
                                         >
                                             <Phone className="w-4 h-4 text-orange-500" />
-                                            Plan Call
+                                            {aiLoading === 'plan' ? 'Planning...' : 'Plan Call'}
                                         </button>
                                     </div>
                                 </div>

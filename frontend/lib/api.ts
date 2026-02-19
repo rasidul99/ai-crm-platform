@@ -73,5 +73,13 @@ export const api = {
     analyzeLead: async (leadId: string) => {
         const response = await axios.post(`${API_URL}/ai/analyze-lead`, { leadId });
         return response.data;
+    },
+    scoreLead: async (leadId: string) => {
+        const response = await axios.post(`${API_URL}/ai/score-lead`, { leadId });
+        return response.data;
+    },
+    planCall: async (leadId: string) => {
+        const response = await axios.post(`${API_URL}/ai/plan-call`, { leadId });
+        return response.data;
     }
 };
