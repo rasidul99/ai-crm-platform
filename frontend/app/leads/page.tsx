@@ -9,6 +9,7 @@ import { Eye, Calendar, Mail, Phone, Sparkles, BarChart3, X, ChevronDown } from 
 import clsx from "clsx";
 import toast, { Toaster } from 'react-hot-toast';
 import { EditLeadModal } from "../../components/EditLeadModal";
+import { CreateLeadModal } from "../../components/CreateLeadModal";
 
 const STATUS_OPTIONS = ['NEW', 'CONTACTING', 'REPLIED', 'BOOKED', 'CLOSED', 'ARCHIVED'];
 
@@ -19,6 +20,7 @@ export default function LeadsPage() {
     const [aiLoading, setAiLoading] = useState<string | null>(null);
     const [aiOutput, setAiOutput] = useState<{ title: string; content: string } | null>(null);
     const [editModalOpen, setEditModalOpen] = useState(false);
+    const [createModalOpen, setCreateModalOpen] = useState(false);
 
     useEffect(() => {
         loadLeads();
@@ -64,7 +66,7 @@ export default function LeadsPage() {
             setAiOutput({ title: 'Draft Email', content: data.email });
         } catch (error) {
             console.error("Failed to generate email", error);
-            toast.error("Failed to generate email");
+            toast.error((error as any).response?.data?.error || "Failed to generate email");
         } finally {
             setAiLoading(null);
         }
@@ -78,7 +80,7 @@ export default function LeadsPage() {
             setAiOutput({ title: 'Lead Analysis', content: data.analysis });
         } catch (error) {
             console.error("Failed to analyze lead", error);
-            toast.error("Failed to analyze lead");
+            toast.error((error as any).response?.data?.error || "Failed to analyze lead");
         } finally {
             setAiLoading(null);
         }
@@ -94,7 +96,10 @@ export default function LeadsPage() {
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Leads</h1>
                         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium">Auto-Sync Active</span>
                     </div>
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    <button
+                        onClick={() => setCreateModalOpen(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
                         + Add Lead
                     </button>
                 </header>
@@ -106,6 +111,8 @@ export default function LeadsPage() {
                                 <tr>
                                     <th className="px-6 py-4 font-medium text-gray-500 dark:text-gray-400">Name</th>
                                     <th className="px-6 py-4 font-medium text-gray-500 dark:text-gray-400">Email</th>
+                                    <th className="px-6 py-4 font-medium text-gray-500 dark:text-gray-400">Phone</th>
+                                    <th className="px-6 py-4 font-medium text-gray-500 dark:text-gray-400">AI Score</th>
                                     <th className="px-6 py-4 font-medium text-gray-500 dark:text-gray-400">Status</th>
                                     <th className="px-6 py-4 font-medium text-gray-500 dark:text-gray-400">Created At</th>
                                     <th className="px-6 py-4 font-medium text-gray-500 dark:text-gray-400 text-right">Actions</th>
@@ -128,6 +135,19 @@ export default function LeadsPage() {
                                             </td>
                                             <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
                                                 {lead.email || '-'}
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
+                                                {lead.phone || '-'}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-1">
+                                                    <span className={clsx("font-semibold", {
+                                                        'text-green-600': lead.score >= 80,
+                                                        'text-yellow-600': lead.score >= 50 && lead.score < 80,
+                                                        'text-red-600': lead.score < 50
+                                                    })}>{lead.score}</span>
+                                                    <span className="text-xs text-gray-400">/ 100</span>
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="relative inline-block text-left">
@@ -296,6 +316,15 @@ export default function LeadsPage() {
                                 if (updated) setSelectedLead(updated);
                             });
                         }
+                    }}
+                />
+
+                <CreateLeadModal
+                    isOpen={createModalOpen}
+                    onClose={() => setCreateModalOpen(false)}
+                    onSuccess={() => {
+                        loadLeads();
+                        toast.success("Lead created successfully");
                     }}
                 />
 

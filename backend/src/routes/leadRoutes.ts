@@ -5,7 +5,7 @@ const router = Router();
 
 router.get('/', getLeads);
 router.post('/', createLead);
-router.put('/:id', updateLead);
+router.patch('/:id', updateLead);
 router.delete('/:id', deleteLead);
 router.patch('/:id/stage', updateLeadStage);
 
